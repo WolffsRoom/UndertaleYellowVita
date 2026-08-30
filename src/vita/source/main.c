@@ -276,15 +276,15 @@ int main(void) {
         int game_width = (int)data->gen8.defaultWindowWidth;
         int game_height = (int)data->gen8.defaultWindowHeight;
         Runner_drawPre(runner, 960, 544);
+        Runner_beginFrame(runner, game_width, game_height, 960, 544, 960, 544);
+        Runner_drawViews(runner, game_width, game_height, false);
+        renderer->vtable->endFrameInit(renderer);
+        Runner_drawPost(runner, 960, 544);
+        renderer->vtable->endFrameEnd(renderer);
+        Runner_drawGUI(runner, 960, 544, game_width, game_height);
         if (s_portSplashActive) {
             VitaSettings_drawPortSplash(&settings, renderer, 1.0f);
         } else {
-            Runner_beginFrame(runner, game_width, game_height, 960, 544, 960, 544);
-            Runner_drawViews(runner, game_width, game_height, false);
-            renderer->vtable->endFrameInit(renderer);
-            Runner_drawPost(runner, 960, 544);
-            renderer->vtable->endFrameEnd(renderer);
-            Runner_drawGUI(runner, 960, 544, game_width, game_height);
             VitaSettings_drawTouchControls(&settings, renderer);
             VitaSettings_drawBrightness(&settings, renderer);
             VitaSettings_draw(&settings, renderer);

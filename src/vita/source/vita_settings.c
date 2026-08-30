@@ -2622,12 +2622,15 @@ void VitaSettings_drawCalibration(VitaSettings* s, Renderer* r) {
 }
 
 void VitaSettings_drawPortSplash(VitaSettings* s, Renderer* r, float alpha) {
-    if (alpha <= 0.0f) return;
+    if (alpha <= 0.0f || r == nullptr) return;
     g_vitaPortOverlayFullScreen = 1;
     r->vtable->beginGUI(r, 960, 544, 0, 0, 960, 544, RENDER_TARGET_HOST_FRAMEBUFFER);
 
+    // Solid black background
+    r->vtable->drawRectangle(r, 0.0f, 0.0f, 960.0f, 544.0f, 0x000000, 1.0f, false);
+
     // Wolff Avatar image centered at top (scaled to 128x128)
-    drawBundledControl("Wolff", 480.0f, 160.0f, 128.0f, alpha);
+    drawControl(r, "Wolff", 480.0f, 160.0f, 128.0f, alpha);
 
     // Title: "PS Vita port by Wolffs Room"
     drawTextAndIconsExt(r, "PS Vita port by Wolffs Room", 480.0f, 275.0f, 1.6f, 0xFFFFFF, true);
