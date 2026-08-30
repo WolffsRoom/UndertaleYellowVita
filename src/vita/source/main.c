@@ -1,3 +1,4 @@
+#include <psp2/appmgr.h>
 #include <psp2/ctrl.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
@@ -131,6 +132,12 @@ static DataWinParserOptions parser_options(void) {
     return options;
 }
 
+static bool settings_language_uses_external_mod(const VitaSettings* s) {
+    if (s == NULL || s->modIndex < 0 || s->modIndex >= s->modCount) return false;
+    const char* name = s->modNames[s->modIndex];
+    return name != NULL && strcmp(name, "English") != 0 && strcmp(name, "Japanese") != 0 && strcmp(name, "Original") != 0;
+}
+
 int main(void) {
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
@@ -139,8 +146,36 @@ int main(void) {
     sceIoRemove(LOG_PATH);
     log_line("Undertale Yellow Vita base runner 00.02");
 
+    VitaSettings settings;
+    VitaSettings_load(&settings);
+    VitaSettings_setLauncherMode(false);
+    VitaSettings_setActiveChapter(0);
+
+    char game_path[256];
+    snprintf(game_path, sizeof(game_path), "%s", GAME_PATH);
+    char mod_path[256] = {0};
+
+    if (settings_language_uses_external_mod(&settings)) {
+        const char* modName = settings.modNames[settings.modIndex];
+        char mod_game[256];
+        snprintf(mod_game, sizeof(mod_game), "%smods/Lang/%s/data.win", DATA_ROOT, modName);
+        SceIoStat mod_stat;
+        if (sceIoGetstat(mod_game, &mod_stat) >= 0 && mod_stat.st_size >= 1024) {
+            snprintf(game_path, sizeof(game_path), "%s", mod_game);
+            snprintf(mod_path, sizeof(mod_path), "%smods/Lang/%s/", DATA_ROOT, modName);
+            log_line("MOD=alternate_game=enabled");
+        } else {
+            snprintf(mod_game, sizeof(mod_game), "%smods/%s/data.win", DATA_ROOT, modName);
+            if (sceIoGetstat(mod_game, &mod_stat) >= 0 && mod_stat.st_size >= 1024) {
+                snprintf(game_path, sizeof(game_path), "%s", mod_game);
+                snprintf(mod_path, sizeof(mod_path), "%smods/%s/", DATA_ROOT, modName);
+                log_line("MOD=alternate_game=direct_root_enabled");
+            }
+        }
+    }
+
     SceIoStat game_stat;
-    if (sceIoGetstat(GAME_PATH, &game_stat) < 0 || game_stat.st_size < 1024) {
+    if (sceIoGetstat(game_path, &game_stat) < 0 || game_stat.st_size < 1024) {
         log_line("FATAL=data.win_missing");
         sceKernelExitProcess(1);
     }
@@ -154,7 +189,7 @@ int main(void) {
     vglSetupRuntimeShaderCompiler(SHARK_OPT_SLOW, 0, 0, 0);
     vglInitExtended(0, 960, 544, 64 * 1024 * 1024, SCE_GXM_MULTISAMPLE_NONE);
 
-    DataWin *data = DataWin_parse(GAME_PATH, parser_options());
+    DataWin *data = DataWin_parse(game_path, parser_options());
     if (data == NULL) {
         log_line("FATAL=data.win_parse_failed");
         sceKernelExitProcess(2);
@@ -162,12 +197,12 @@ int main(void) {
 
     VMContext *vm = VM_create(data);
     OverlayFileSystem *files = OverlayFileSystem_create(DATA_ROOT, SAVE_ROOT);
+    if (mod_path[0] != '\0') {
+        OverlayFileSystem_setModPath(files, mod_path);
+        log_line("MOD=overlay=enabled");
+    }
     Renderer *renderer = GLLegacyRenderer_create();
     AudioSystem *audio = (AudioSystem *)AlAudioSystem_create();
-    VitaSettings settings;
-    VitaSettings_load(&settings);
-    VitaSettings_setLauncherMode(false);
-    VitaSettings_setActiveChapter(0);
     Runner *runner = Runner_create(data, vm, renderer, (FileSystem *)files, audio);
     VitaSettings_applyAudio(&settings, audio);
     char *game_args[] = {"eboot.bin", "-game", "data.win"};
@@ -190,7 +225,8 @@ int main(void) {
         int dy = (int)pad.ly - 128;
         bool restart_requested = VitaSettings_handleInput(&settings, &pad, audio);
         if (restart_requested) {
-            log_line("SETTINGS=restart_requested");
+            log_line("SETTINGS=restart_requested=executing_loadexec");
+            sceAppMgrLoadExec("app0:eboot.bin", NULL, NULL);
             break;
         }
         static bool s_portSplashCompleted = false;

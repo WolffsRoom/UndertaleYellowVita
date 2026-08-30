@@ -22,6 +22,9 @@
 extern bool g_vitaModernGlActive;
 static Renderer* activeSettingsRenderer = NULL;
 
+#define SETTINGS_PATH "ux0:data/undertale-yellow/config.ini"
+#define MODS_ROOT "ux0:data/undertale-yellow/mods/"
+#define LANG_MODS_ROOT "ux0:data/undertale-yellow/mods/Lang/"
 #define NATIVE_LANGUAGE_CONFIG "ux0:data/undertale-yellow/save/true_config.ini"
 
 static void drawTextAndIconsExt(Renderer* r, const char* fmt, float x, float y, float scale, uint32_t color, bool center);
@@ -256,9 +259,7 @@ static void loadTrophyState(VitaSettings* s) {
     rebuildTrophyDisplayOrder(s);
 }
 
-#define SETTINGS_PATH "ux0:data/undertale-yellow/config.ini"
 #define SETTINGS_CATEGORIES 5
-#define MODS_ROOT "ux0:data/undertale-yellow/mods/Lang/"
 
 static bool g_devMode = false;
 static uint32_t queuedUIIconCount = 0;

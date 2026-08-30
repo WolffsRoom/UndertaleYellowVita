@@ -89,9 +89,24 @@ ux0:data/undertale-yellow/
 │   └── (all .ogg sound effect files)
 ├── pvr/
 │   └── (hardware-compressed GPU texture pages)
-└── texture-cache/
-    └── (prepared 16-bit RGBA4444 texture pages)
+├── texture-cache/
+│   └── (prepared 16-bit RGBA4444 texture pages)
+└── mods/
+    └── Lang/
+        └── Portuguese-BR/
+            ├── data.win
+            ├── options.ini
+            ├── mus/
+            └── snd/
 ```
+
+---
+
+## Translations and Mod Support
+
+Just like *DeltaruneVita*, **Undertale Yellow Vita** features native modular mod and translation support. Translations and mods can be placed inside `ux0:data/undertale-yellow/mods/Lang/`.
+
+When installed, translations appear dynamically under **Game Settings > Language** (press **Select** in-game). Selecting a language automatically reboots the engine and applies the translated data, textures, and audio.
 
 ---
 

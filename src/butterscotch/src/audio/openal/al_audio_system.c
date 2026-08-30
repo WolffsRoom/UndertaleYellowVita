@@ -223,6 +223,17 @@ static char* resolveSharedMusicPath(FileSystem* fs, const char* filename) {
     if (strncmp(relative, "mus/", 4) == 0) relative += 4;
     else if (strncmp(relative, "music/", 6) == 0) relative += 6;
 
+    char shared[560];
+    snprintf(shared, sizeof(shared), "mus/%s", relative);
+    char* resolved = fs->vtable->resolvePath(fs, shared);
+    if (resolved != nullptr && fs->vtable->fileExists(fs, resolved)) return resolved;
+    free(resolved);
+
+    snprintf(shared, sizeof(shared), "snd/%s", relative);
+    resolved = fs->vtable->resolvePath(fs, shared);
+    if (resolved != nullptr && fs->vtable->fileExists(fs, resolved)) return resolved;
+    free(resolved);
+
 #ifdef PLATFORM_VITA
     char vitaYellowPath[640];
     SceIoStat vitaYellowStat;
@@ -230,31 +241,8 @@ static char* resolveSharedMusicPath(FileSystem* fs, const char* filename) {
     if (sceIoGetstat(vitaYellowPath, &vitaYellowStat) >= 0) return safeStrdup(vitaYellowPath);
     snprintf(vitaYellowPath, sizeof(vitaYellowPath), "ux0:data/undertale-yellow/snd/%s", relative);
     if (sceIoGetstat(vitaYellowPath, &vitaYellowStat) >= 0) return safeStrdup(vitaYellowPath);
-    // Avoid routing an already absolute Vita path back through OverlayFileSystem.
-    // This is also the reliable fallback used by Chapter 5's synchronized logo.
-    char vitaPath[640];
-    SceIoStat st;
-    snprintf(vitaPath, sizeof(vitaPath), "ux0:data/deltarune/deltarunevita/mods/Lang/Portuguese-BR/music/%s", relative);
-    if (sceIoGetstat(vitaPath, &st) >= 0) return safeStrdup(vitaPath);
-    snprintf(vitaPath, sizeof(vitaPath), "ux0:data/deltarune/deltarunevita/mods/Lang/Spanish/music/%s", relative);
-    if (sceIoGetstat(vitaPath, &st) >= 0) return safeStrdup(vitaPath);
-    snprintf(vitaPath, sizeof(vitaPath), "ux0:data/deltarune/deltarunevita/mods/Lang/Italian/music/%s", relative);
-    if (sceIoGetstat(vitaPath, &st) >= 0) return safeStrdup(vitaPath);
-    snprintf(vitaPath, sizeof(vitaPath), "ux0:data/deltarune/deltarunevita/mods/Lang/Turkish/music/%s", relative);
-    if (sceIoGetstat(vitaPath, &st) >= 0) return safeStrdup(vitaPath);
-    snprintf(vitaPath, sizeof(vitaPath), "ux0:data/deltarune/deltarunevita/mods/Lang/German/music/%s", relative);
-    if (sceIoGetstat(vitaPath, &st) >= 0) return safeStrdup(vitaPath);
-    snprintf(vitaPath, sizeof(vitaPath), "ux0:data/deltarune/deltarunevita/mods/Lang/Russian/music/%s", relative);
-    if (sceIoGetstat(vitaPath, &st) >= 0) return safeStrdup(vitaPath);
-    snprintf(vitaPath, sizeof(vitaPath), "ux0:data/deltarune/deltarunevita/music/%s", relative);
-    if (sceIoGetstat(vitaPath, &st) >= 0) return safeStrdup(vitaPath);
 #endif
 
-    char shared[560];
-    snprintf(shared, sizeof(shared), "../music/%s", relative);
-    char* resolved = fs->vtable->resolvePath(fs, shared);
-    if (resolved != nullptr && fs->vtable->fileExists(fs, resolved)) return resolved;
-    free(resolved);
     return nullptr;
 }
 
@@ -276,47 +264,37 @@ static char* resolveExternalPath(AlAudioSystem* ma, Sound* sound) {
         snprintf(filename, sizeof(filename), "%s.ogg", file);
     }
 
-#ifdef PLATFORM_VITA
-    const char* vitaLeaf = strrchr(filename, '/');
-    const char* vitaBackslash = strrchr(filename, '\\');
-    if (vitaBackslash != nullptr && (vitaLeaf == nullptr || vitaBackslash > vitaLeaf)) vitaLeaf = vitaBackslash;
-    vitaLeaf = vitaLeaf != nullptr ? vitaLeaf + 1 : filename;
-    char vitaCandidate[640];
-    SceIoStat vitaStat;
-    snprintf(vitaCandidate, sizeof(vitaCandidate), "ux0:data/undertale-yellow/snd/%s", vitaLeaf);
-    if (sceIoGetstat(vitaCandidate, &vitaStat) >= 0) return safeStrdup(vitaCandidate);
-    snprintf(vitaCandidate, sizeof(vitaCandidate), "ux0:data/undertale-yellow/mus/%s", vitaLeaf);
-    if (sceIoGetstat(vitaCandidate, &vitaStat) >= 0) return safeStrdup(vitaCandidate);
-#endif
-
     char* resolved = ma->fileSystem->vtable->resolvePath(ma->fileSystem, filename);
     if (resolved != nullptr && ma->fileSystem->vtable->fileExists(ma->fileSystem, resolved)) return resolved;
     free(resolved);
 
-    // Language packs made for Windows can retain an absolute path or an old
-    // mods/PTBR layout.  Absolute paths bypass OverlayFileSystem's normal
-    // mod -> chapter fallback, so recover the leaf name and look for the
-    // original Steam sound inside the active chapter.  Translation packs do
-    // not need to duplicate audiogroup/SFX files for this to work.
     const char* leaf = strrchr(filename, '/');
     const char* backslash = strrchr(filename, '\\');
     if (backslash != nullptr && (leaf == nullptr || backslash > leaf)) leaf = backslash;
     leaf = leaf != nullptr ? leaf + 1 : filename;
+
     if (leaf[0] != '\0') {
-        const char* prefixes[] = {"", "sfx/", "sound_wav/"};
+        const char* prefixes[] = {"mus/", "snd/", ""};
         for (uint32_t i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); ++i) {
             char candidate[560];
             snprintf(candidate, sizeof(candidate), "%s%s", prefixes[i], leaf);
             resolved = ma->fileSystem->vtable->resolvePath(ma->fileSystem, candidate);
             if (resolved != nullptr && ma->fileSystem->vtable->fileExists(ma->fileSystem, resolved)) {
-#ifdef PLATFORM_VITA
-                vitaAudioLog("external_chapter_fallback", sound->file, resolved);
-#endif
                 return resolved;
             }
             free(resolved);
         }
     }
+
+#ifdef PLATFORM_VITA
+    char vitaCandidate[640];
+    SceIoStat vitaStat;
+    snprintf(vitaCandidate, sizeof(vitaCandidate), "ux0:data/undertale-yellow/snd/%s", leaf);
+    if (sceIoGetstat(vitaCandidate, &vitaStat) >= 0) return safeStrdup(vitaCandidate);
+    snprintf(vitaCandidate, sizeof(vitaCandidate), "ux0:data/undertale-yellow/mus/%s", leaf);
+    if (sceIoGetstat(vitaCandidate, &vitaStat) >= 0) return safeStrdup(vitaCandidate);
+#endif
+
     return resolveSharedMusicPath(ma->fileSystem, filename);
 }
 
