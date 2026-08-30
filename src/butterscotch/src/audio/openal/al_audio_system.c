@@ -161,17 +161,33 @@ static SoundInstance* findFreeSlot(AlAudioSystem* ma) {
     }
 
     // Second pass: evict the lowest-priority ended sound.
-    // Streaming instances can briefly report AL_STOPPED during an underrun, so exclude them from eviction to keep music alive across SFX bursts.
+    // Streaming instances and music instances are excluded from eviction to keep background music alive across SFX bursts.
     SoundInstance* best = nullptr;
     repeat(MAX_SOUND_INSTANCES, i) {
         SoundInstance* inst = &ma->instances[i];
-        if (inst->streaming)
+        if (inst->streaming || inst->music)
             continue;
 
         if (!alSourceIsPlaying(inst->alSource)) {
             if (best == nullptr || best->priority > inst->priority) {
                 best = inst;
             }
+        }
+    }
+
+    if (best != nullptr) {
+        releaseInstance(best);
+        return best;
+    }
+
+    // Third pass: evict lowest-priority active non-music SFX if all slots are occupied
+    repeat(MAX_SOUND_INSTANCES, i) {
+        SoundInstance* inst = &ma->instances[i];
+        if (inst->streaming || inst->music)
+            continue;
+
+        if (best == nullptr || best->priority > inst->priority) {
+            best = inst;
         }
     }
 
@@ -407,11 +423,8 @@ static void maUpdate(AudioSystem* audio, float deltaTime) {
     if (ma->disabled) return;
 
 #ifdef PLATFORM_VITA
-    // One refill is enough at 60 FPS. At 20 FPS or below a 2048-sample block
-    // can be consumed faster than it is replaced, so allow a second refill
-    // before the queue drains and forces the much more expensive synchronous
-    // underrun recovery path.
-    int vitaStreamRefillsRemaining = deltaTime >= 0.05f ? 2 : 1;
+    // Increase refill allowance so background music streams never starve while SFX is playing
+    int vitaStreamRefillsRemaining = deltaTime >= 0.05f ? 4 : 2;
 #endif
 
     repeat(MAX_SOUND_INSTANCES, i) {
@@ -449,7 +462,7 @@ static void maUpdate(AudioSystem* audio, float deltaTime) {
                                        processed == queuedBeforeRecovery;
             int refillBudget = 1;
 #ifdef PLATFORM_VITA
-            if (!recoveringUnderrun && vitaStreamRefillsRemaining <= 0)
+            if (!recoveringUnderrun && !inst->music && vitaStreamRefillsRemaining <= 0)
                 refillBudget = 0;
 #endif
             int decodedThisFrame = 0;

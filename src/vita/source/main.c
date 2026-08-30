@@ -193,59 +193,6 @@ int main(void) {
             log_line("SETTINGS=restart_requested");
             break;
         }
-        if (!settings.open && !settings.adjustMode) {
-            for (unsigned i = 0; i < sizeof(KEY_MAP) / sizeof(KEY_MAP[0]); ++i) {
-                bool down = (pad.buttons & KEY_MAP[i].mask) != 0;
-                if (KEY_MAP[i].key == 'Z') down |= touch.confirm;
-                if (KEY_MAP[i].key == 'X') down |= touch.cancel;
-                if (KEY_MAP[i].key == 'C') down |= touch.menu;
-                if (KEY_MAP[i].key == VK_LEFT) down |= touch.left;
-                if (KEY_MAP[i].key == VK_RIGHT) down |= touch.right;
-                if (KEY_MAP[i].key == VK_UP) down |= touch.up;
-                if (KEY_MAP[i].key == VK_DOWN) down |= touch.down;
-                if (KEY_MAP[i].key == VK_LEFT) down |= dx < -48;
-                if (KEY_MAP[i].key == VK_RIGHT) down |= dx > 48;
-                if (KEY_MAP[i].key == VK_UP) down |= dy < -48;
-                if (KEY_MAP[i].key == VK_DOWN) down |= dy > 48;
-                set_key(runner->keyboard, KEY_MAP[i].key, down, &previous[i]);
-            }
-        }
-
-        GamepadSlot *gp = &runner->gamepads->slots[0];
-        gp->connected = true;
-        gp->jid = 0;
-        runner->gamepads->connectedCount = 1;
-        if (gp->description[0] == '\0') {
-            snprintf(gp->description, sizeof(gp->description), "PS Vita Controller");
-            snprintf(gp->guid, sizeof(gp->guid), "PSVITA000000000000000000000001");
-        }
-        const int gp_buttons[] = {GP_FACE1, GP_FACE2, GP_FACE3, GP_FACE4,
-            GP_SHOULDERL, GP_SHOULDERR, GP_SELECT, GP_START,
-            GP_PADU, GP_PADD, GP_PADL, GP_PADR};
-        const bool gp_down[] = {
-            (pad.buttons & SCE_CTRL_CROSS) != 0 || touch.confirm,
-            (pad.buttons & SCE_CTRL_CIRCLE) != 0 || touch.cancel,
-            (pad.buttons & SCE_CTRL_SQUARE) != 0,
-            (pad.buttons & SCE_CTRL_TRIANGLE) != 0 || touch.menu,
-            (pad.buttons & SCE_CTRL_LTRIGGER) != 0,
-            (pad.buttons & SCE_CTRL_RTRIGGER) != 0,
-            (pad.buttons & SCE_CTRL_SELECT) != 0,
-            (pad.buttons & SCE_CTRL_START) != 0,
-            (pad.buttons & SCE_CTRL_UP) != 0 || touch.up,
-            (pad.buttons & SCE_CTRL_DOWN) != 0 || touch.down,
-            (pad.buttons & SCE_CTRL_LEFT) != 0 || touch.left,
-            (pad.buttons & SCE_CTRL_RIGHT) != 0 || touch.right
-        };
-        for (unsigned i = 0; i < sizeof(gp_buttons) / sizeof(gp_buttons[0]); ++i)
-            RunnerGamepad_setButton(runner->gamepads, 0, gp_buttons[i], gp_down[i], &gamepad_previous[i]);
-        float physical_x = (float)dx / 128.0f, physical_y = (float)dy / 128.0f;
-        float axis_x = absf_local(touch.stick_x) > absf_local(physical_x) ? touch.stick_x : physical_x;
-        float axis_y = absf_local(touch.stick_y) > absf_local(physical_y) ? touch.stick_y : physical_y;
-        RunnerGamepad_setAxis(runner->gamepads, 0, GP_AXIS_LH, axis_x);
-        RunnerGamepad_setAxis(runner->gamepads, 0, GP_AXIS_LV, axis_y);
-        VitaSettings_setTouchVisuals(&settings, touch.stick_x, touch.stick_y,
-                                     touch.confirm, touch.cancel, touch.menu);
-
         static bool s_portSplashCompleted = false;
         static bool s_portSplashActive = false;
         if (!s_portSplashCompleted && runner->currentRoomIndex > 0) {
@@ -261,6 +208,67 @@ int main(void) {
             }
             prevCross = cross;
         }
+
+        bool blockGameInput = settings.open || settings.adjustMode || s_portSplashActive;
+
+        for (unsigned i = 0; i < sizeof(KEY_MAP) / sizeof(KEY_MAP[0]); ++i) {
+            bool down = false;
+            if (!blockGameInput) {
+                down = (pad.buttons & KEY_MAP[i].mask) != 0;
+                if (KEY_MAP[i].key == 'Z') down |= touch.confirm;
+                if (KEY_MAP[i].key == 'X') down |= touch.cancel;
+                if (KEY_MAP[i].key == 'C') down |= touch.menu;
+                if (KEY_MAP[i].key == VK_LEFT) down |= touch.left;
+                if (KEY_MAP[i].key == VK_RIGHT) down |= touch.right;
+                if (KEY_MAP[i].key == VK_UP) down |= touch.up;
+                if (KEY_MAP[i].key == VK_DOWN) down |= touch.down;
+                if (KEY_MAP[i].key == VK_LEFT) down |= dx < -48;
+                if (KEY_MAP[i].key == VK_RIGHT) down |= dx > 48;
+                if (KEY_MAP[i].key == VK_UP) down |= dy < -48;
+                if (KEY_MAP[i].key == VK_DOWN) down |= dy > 48;
+            }
+            set_key(runner->keyboard, KEY_MAP[i].key, down, &previous[i]);
+        }
+
+        GamepadSlot *gp = &runner->gamepads->slots[0];
+        gp->connected = true;
+        gp->jid = 0;
+        runner->gamepads->connectedCount = 1;
+        if (gp->description[0] == '\0') {
+            snprintf(gp->description, sizeof(gp->description), "PS Vita Controller");
+            snprintf(gp->guid, sizeof(gp->guid), "PSVITA000000000000000000000001");
+        }
+        const int gp_buttons[] = {GP_FACE1, GP_FACE2, GP_FACE3, GP_FACE4,
+            GP_SHOULDERL, GP_SHOULDERR, GP_SELECT, GP_START,
+            GP_PADU, GP_PADD, GP_PADL, GP_PADR};
+        const bool gp_down[] = {
+            !blockGameInput && ((pad.buttons & SCE_CTRL_CROSS) != 0 || touch.confirm),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_CIRCLE) != 0 || touch.cancel),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_SQUARE) != 0),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_TRIANGLE) != 0 || touch.menu),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_LTRIGGER) != 0),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_RTRIGGER) != 0),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_SELECT) != 0),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_START) != 0),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_UP) != 0 || touch.up),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_DOWN) != 0 || touch.down),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_LEFT) != 0 || touch.left),
+            !blockGameInput && ((pad.buttons & SCE_CTRL_RIGHT) != 0 || touch.right)
+        };
+        for (unsigned i = 0; i < sizeof(gp_buttons) / sizeof(gp_buttons[0]); ++i)
+            RunnerGamepad_setButton(runner->gamepads, 0, gp_buttons[i], gp_down[i], &gamepad_previous[i]);
+        
+        float axis_x = 0.0f;
+        float axis_y = 0.0f;
+        if (!blockGameInput) {
+            float physical_x = (float)dx / 128.0f, physical_y = (float)dy / 128.0f;
+            axis_x = absf_local(touch.stick_x) > absf_local(physical_x) ? touch.stick_x : physical_x;
+            axis_y = absf_local(touch.stick_y) > absf_local(physical_y) ? touch.stick_y : physical_y;
+        }
+        RunnerGamepad_setAxis(runner->gamepads, 0, GP_AXIS_LH, axis_x);
+        RunnerGamepad_setAxis(runner->gamepads, 0, GP_AXIS_LV, axis_y);
+        VitaSettings_setTouchVisuals(&settings, touch.stick_x, touch.stick_y,
+                                     touch.confirm, touch.cancel, touch.menu);
 
         uint64_t now = sceKernelGetProcessTimeWide();
         runner->deltaTime = (double)(now - last_time);

@@ -48,6 +48,12 @@ foreach(UI_ASSET_SOURCE ${UI_ASSET_SOURCES})
   get_filename_component(UI_ASSET_NAME "${UI_ASSET_SOURCE}" NAME)
   list(APPEND UI_ASSET_VPK_FILES "${UI_ASSET_SOURCE}" "assets/ui/${UI_ASSET_NAME}")
 endforeach()
+file(GLOB SOUND_ASSET_SOURCES "${CMAKE_SOURCE_DIR}/../../data/assets/sounds/*.*")
+set(SOUND_ASSET_VPK_FILES)
+foreach(SOUND_ASSET_SOURCE ${SOUND_ASSET_SOURCES})
+  get_filename_component(SOUND_ASSET_NAME "${SOUND_ASSET_SOURCE}" NAME)
+  list(APPEND SOUND_ASSET_VPK_FILES "${SOUND_ASSET_SOURCE}" "assets/sounds/${SOUND_ASSET_NAME}")
+endforeach()
 target_include_directories(${PROJECT_NAME} PRIVATE
   ../butterscotch/src
   ../butterscotch/src/audio/openal
@@ -92,4 +98,5 @@ vita_create_vpk(UndertaleYellow.vpk UTYV00001 eboot.bin
     ${CMAKE_SOURCE_DIR}/../../data/assets/LiveArea/template.xml sce_sys/livearea/contents/template.xml
     ${CMAKE_SOURCE_DIR}/../../data/assets/Wolff.png assets/Wolff.png
     ${UI_ASSET_VPK_FILES}
+    ${SOUND_ASSET_VPK_FILES}
 )

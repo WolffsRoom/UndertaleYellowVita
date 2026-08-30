@@ -849,11 +849,18 @@ static ALuint loadNativeOGG(const char* path) {
 static void initNativeSounds() {
     if (native_al_sources[0] != 0) return;
     native_al_buffers[0] = loadNativeOGG("app0:assets/sounds/snd_menumove.ogg");
+    if (native_al_buffers[0] == 0) native_al_buffers[0] = loadNativeWAV("app0:assets/sounds/snd_menumove.wav");
     native_al_buffers[1] = loadNativeOGG("app0:assets/sounds/snd-select.ogg");
+    if (native_al_buffers[1] == 0) native_al_buffers[1] = loadNativeWAV("app0:assets/sounds/snd-select.wav");
     native_al_buffers[2] = loadNativeOGG("app0:assets/sounds/snd_swing.ogg");
-    if (native_al_buffers[0] == 0) native_al_buffers[0] = loadNativeOGG("ux0:data/undertale-yellow/snd/snd_menumove.wav");
+    if (native_al_buffers[2] == 0) native_al_buffers[2] = loadNativeWAV("app0:assets/sounds/snd_swing.wav");
+
+    if (native_al_buffers[0] == 0) native_al_buffers[0] = loadNativeOGG("ux0:data/undertale-yellow/snd/snd_menumove.ogg");
+    if (native_al_buffers[0] == 0) native_al_buffers[0] = loadNativeWAV("ux0:data/undertale-yellow/snd/snd_menumove.wav");
     if (native_al_buffers[1] == 0) native_al_buffers[1] = loadNativeOGG("ux0:data/undertale-yellow/snd/snd-select.ogg");
-    if (native_al_buffers[2] == 0) native_al_buffers[2] = loadNativeOGG("ux0:data/undertale-yellow/snd/snd_swing.wav");
+    if (native_al_buffers[2] == 0) native_al_buffers[2] = loadNativeOGG("ux0:data/undertale-yellow/snd/snd_swing.ogg");
+    if (native_al_buffers[2] == 0) native_al_buffers[2] = loadNativeWAV("ux0:data/undertale-yellow/snd/snd_swing.wav");
+
     alGenSources(3, native_al_sources);
     for (int i = 0; i < 3; ++i) {
         if (native_al_sources[i] != 0 && native_al_buffers[i] != 0)
@@ -2629,8 +2636,8 @@ void VitaSettings_drawPortSplash(VitaSettings* s, Renderer* r, float alpha) {
     // Solid black background
     r->vtable->drawRectangle(r, 0.0f, 0.0f, 960.0f, 544.0f, 0x000000, 1.0f, false);
 
-    // Wolff Avatar image centered at top (scaled to 128x128)
-    drawControl(r, "Wolff", 480.0f, 160.0f, 128.0f, alpha);
+    // Wolff Avatar image centered at top (+30% larger: 166px)
+    drawControl(r, "Wolff", 480.0f, 150.0f, 166.0f, alpha);
 
     // Title: "PS Vita port by Wolffs Room"
     drawTextAndIconsExt(r, "PS Vita port by Wolffs Room", 480.0f, 275.0f, 1.6f, 0xFFFFFF, true);
@@ -2641,8 +2648,8 @@ void VitaSettings_drawPortSplash(VitaSettings* s, Renderer* r, float alpha) {
         "Aperte {X} para continuar",
         "Pulsa {X} para continuar"), 480.0f, 365.0f, 1.3f, 0xE0E0E0, true);
 
-    // Footer: "Internal Build v0.1"
-    drawTextAndIconsExt(r, "Internal Build v0.1", 480.0f, 500.0f, 0.95f, 0x888888, true);
+    // Footer: "Internal Build v0.1" (+20% larger: 1.15f scale)
+    drawTextAndIconsExt(r, "Internal Build v0.1", 480.0f, 495.0f, 1.15f, 0x888888, true);
 
     r->vtable->endGUI(r);
     drawQueuedUIIconPass(r);
