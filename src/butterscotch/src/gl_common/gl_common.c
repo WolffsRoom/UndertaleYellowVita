@@ -51,38 +51,6 @@ void GLCommon_beginLetterboxBlit(GLuint fbo, GLuint hostFbo) {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, hostFbo);
 }
 
-#ifdef PLATFORM_VITA
-static void drawScreenFilterScanlines(int sx, int sy, int ex, int ey, float alpha) {
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0, 960, 544, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glDisable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.0f, 0.0f, 0.0f, alpha);
-
-    glBegin(GL_LINES);
-    int top = sy < ey ? sy : ey;
-    int bottom = sy < ey ? ey : sy;
-    for (int y = top; y <= bottom; y += 2) {
-        glVertex2f((float)sx, (float)y + 0.5f);
-        glVertex2f((float)ex, (float)y + 0.5f);
-    }
-    glEnd();
-
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-}
-#endif
-
 void GLCommon_endLetterboxBlit(int32_t fboWidth, int32_t fboHeight, int32_t gameW, int32_t gameH, int32_t windowW, int32_t windowH, GLuint hostFbo) {
     int32_t sx, sy, ex, ey;
 #ifdef PLATFORM_VITA
@@ -114,16 +82,8 @@ void GLCommon_endLetterboxBlit(int32_t fboWidth, int32_t fboHeight, int32_t game
 #ifdef PLATFORM_VITA
     extern int g_vitaTextureLinearFilter;
     extern int g_vitaScreenFilterMode;
-    GLenum filter = (g_vitaTextureLinearFilter || g_vitaScreenFilterMode == 2 || g_vitaScreenFilterMode == 3 || g_vitaScreenFilterMode == 4) ? GL_LINEAR : GL_NEAREST;
+    GLenum filter = (g_vitaTextureLinearFilter || g_vitaScreenFilterMode == 2 || g_vitaScreenFilterMode == 3) ? GL_LINEAR : GL_NEAREST;
     glBlitFramebuffer(0, 0, fboWidth, fboHeight, sx, ey, ex, sy, GL_COLOR_BUFFER_BIT, filter);
-
-    if (g_vitaScreenFilterMode == 1) {
-        // Scanlines mode
-        drawScreenFilterScanlines(sx, sy, ex, ey, 0.28f);
-    } else if (g_vitaScreenFilterMode == 4) {
-        // VHS mode (Scanlines + vintage effect)
-        drawScreenFilterScanlines(sx, sy, ex, ey, 0.35f);
-    }
 #else
     glBlitFramebuffer(0, 0, fboWidth, fboHeight, sx, ey, ex, sy, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 #endif
