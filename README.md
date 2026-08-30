@@ -18,7 +18,9 @@ The project runs the full Undertale Yellow game using a customized version of th
 ## Project Status
 
 <div align="center">
-  <a href="https://github.com/WolffsRoom/UndertaleYellowVita/releases"><img src="https://img.shields.io/github/downloads/WolffsRoom/UndertaleYellowVita/total?style=for-the-badge&color=blue&logo=github" alt="Downloads"></a>
+  <a href="https://github.com/WolffsRoom/UndertaleYellowVita/releases">
+  <img src="https://img.shields.io/github/downloads/WolffsRoom/UndertaleYellowVita/total?style=for-the-badge&color=blue&logo=github&cacheSeconds=60" alt="Downloads">
+</a>
   <a href="https://github.com/WolffsRoom/UndertaleYellowVita/releases/latest"><img src="https://img.shields.io/github/v/release/WolffsRoom/UndertaleYellowVita?style=for-the-badge&color=brightgreen&logo=github" alt="Release"></a>
   <br>
   <img src="https://img.shields.io/badge/OVERALL_PROGRESS-PLAYABLE-brightgreen?style=for-the-badge" alt="Progress">
