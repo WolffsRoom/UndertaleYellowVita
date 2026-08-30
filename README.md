@@ -1,6 +1,6 @@
 <p align="center">
   <a href="#">
-    <img src="data/assets/logo.png" alt="Logo Undertale Yellow PSVita Edition" width="500" style="background: transparent; -webkit-filter: drop-shadow(5px 5px 5px #222); filter: drop-shadow(5px 5px 5px #222);">
+    <img src="data/assets/logo.png" alt="Logo Undertale Yellow PSVita Edition" width="400" style="background: transparent; -webkit-filter: drop-shadow(5px 5px 5px #222); filter: drop-shadow(5px 5px 5px #222);">
   </a>
 </p>
 <p align="center">
@@ -9,9 +9,7 @@
 
 An _unofficial_ native port of **Undertale Yellow** for the PlayStation Vita.
 
-The project runs the full Undertale Yellow game using a customized version of the [Butterscotch](https://github.com/ButterscotchRunner/Butterscotch) engine, with hardware-accelerated rendering powered by [VitaGL](https://github.com/rinnegatamante/vitagl). UndertaleYellowVita features native PS Vita controls, touch controls, customizable Game Settings menu (audio, brightness, screen filters, calibration, control remapping), OpenAL audio streaming, and high-performance texture management tailored for the PS Vita.
-
-Asset preparation and texture optimization are powered by [DeltaRepack](https://github.com/WolffsRoom/DeltaRepack) and [DeltaCache](https://github.com/WolffsRoom/DeltaCache).
+The project runs the full Undertale Yellow game using a customized version of the [Butterscotch](https://github.com/ButterscotchRunner/Butterscotch) engine, with hardware-accelerated rendering powered by [VitaGL](https://github.com/rinnegatamante/vitagl).
 
 > [!NOTE]
 > **Undertale Yellow** is a free fan-made prequel to Toby Fox's *UNDERTALE*, developed by **Team Undertale Yellow**.
@@ -68,7 +66,6 @@ Because **Undertale Yellow** is a free fangame, no PC patching tools or Steam va
 
 1. Download the latest `UndertaleYellow.vpk` and the pre-configured `undertale-yellow.zip` data package from the [Releases](https://github.com/WolffsRoom/UndertaleYellowVita/releases/latest) page.
 2. **Extract `undertale-yellow.zip` on your PC or another device first.**
-   > [!IMPORTANT]
    > Do **NOT** extract the ZIP file directly on the PS Vita using VitaShell. Due to the high number of texture and audio files, extracting on the Vita is extremely slow. Always unzip on your computer beforehand.
 3. Transfer the extracted `undertale-yellow` folder into `ux0:data/` on your PS Vita via VitaShell USB (recommended) or FTP.
 4. Install `UndertaleYellow.vpk` using **VitaShell**.
