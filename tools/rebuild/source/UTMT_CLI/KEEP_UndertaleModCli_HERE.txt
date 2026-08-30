@@ -1,0 +1,1 @@
+Mantenha o UndertaleModCli.exe nesta pasta.

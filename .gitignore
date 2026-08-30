@@ -1,0 +1,40 @@
+# Proprietary game data and prepared copies
+/Undertale Yellow v-1-3-1/
+/data/prepared/
+/tools/rebuild/chapters/
+/tools/rebuild/rebuild/
+/tools/cache/chapters/
+/tools/cache/prepared/
+
+# Generated output
+/artifacts/
+**/build/
+**/build-*/
+*.vpk
+*.velf
+*.elf
+*.log
+
+# Tool dependencies and caches
+__pycache__/
+*.pyc
+/tools/cache/source/UTMT_CLI/*
+!/tools/cache/source/UTMT_CLI/KEEP_UndertaleModCli_HERE.txt
+!/tools/cache/source/UTMT_CLI/COLOQUE_UTMT_AQUI.txt
+/tools/cache/source/PVRTexToolCLI/*
+!/tools/cache/source/PVRTexToolCLI/COLOQUE_PVRTEXTOOL_AQUI.txt
+/tools/rebuild/source/UTMT_CLI/*
+!/tools/rebuild/source/UTMT_CLI/KEEP_UndertaleModCli_HERE.txt
+
+third_party/vitaGL-nosplash/samples/
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+*.user
+*.suo
+*.psp2dmp
+*.tmp
+logs/
+.system_generated/
+!third_party/vitaGL-nosplash/libvitaGL.a
